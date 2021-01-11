@@ -110,17 +110,36 @@ class UI {
         clearBtn.addEventListener("click", () => {
             this.clearCart()
         })
+        cartContent.addEventListener("click", (e) => {
+            if (e.target.classList.contains("remove-item")) {
+                const removeButton = e.target
+                ui.removeItem(removeButton.dataset.id)
+                removeButton.parentElement.parentElement.remove()
+            } else if (e.target.classList.contains("fa-chevron-up")) {
+                const addAmount = e.target
+                const item = cart.find((item) => item.id === addAmount.dataset.id)
+                item.amount++
+                Storage.saveCart(cart)
+                this.setCartValues(cart)
+                addAmount.nextElementSibling.innerText = item.amount
+            } else if (e.target.classList.contains("fa-chevron-down")) {
+                const lowerAmount = e.target
+                const id = lowerAmount.dataset.id
+                const item = cart.find((item) => item.id === id)
+                item.amount--
+                if (item.amount > 0) {
+                    Storage.saveCart(cart)
+                    this.setCartValues(cart)
+                    lowerAmount.previousElementSibling.innerText = item.amount
+                } else {
+                    lowerAmount.parentElement.parentElement.remove()
+                    this.removeItem(id)
+                }
+            }
+        })
     }
 
-    removeCartItem(id, div) {
-        const findIndex = cart.findIndex((product) => product.id === id)
-        cart.splice(findIndex, 1)
-        Storage.saveCart(cart)
-        this.setCartValues(cart)
-        div.remove()
-    }
-
-    clearCart() {        
+    clearCart() {
         let cartItems = cart.map((item) => item.id)
         cartItems.map((id) => this.removeItem(id))
         cartContent.innerHTML = ""
@@ -139,16 +158,6 @@ class UI {
     getSingleButton(id) {
         return buttonsDOM.find((button) => button.dataset.id === id)
     }
-
-    increaseCartItem(id) {
-        const item = cart.find((item) => item.id === id)
-        item.amount++
-        Storage.saveCart(cart)
-        this.setCartValues(cart)
-        // 전체 다 지우고 다시 만들기? or amount만 변경?
-    }
-
-    decarseCartItem(id) {}
 }
 
 const ui = new UI()
@@ -166,13 +175,3 @@ products
         ui.getBagButtons()
         ui.cartLogic()
     })
-
-cartContent.addEventListener("click", (e) => {
-    if (e.target.classList.contains("remove-item")) {
-        ui.removeItem(e.target.dataset.id)
-    } else if (e.target.classList.contains("fa-chevron-up")) {
-        ui.increaseCartItem(e.target.dataset.id)
-    } else if (e.target.classList.contains("fa-chevron-down")) {
-        ui.decarseCartItem(e.target.dataset.id)
-    }
-})
